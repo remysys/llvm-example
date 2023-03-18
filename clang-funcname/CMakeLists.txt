@@ -3,7 +3,7 @@ set(LLVM_LINK_COMPONENTS
   )
 
 add_clang_executable(clang-funcname
-  ClangFuncname.cpp
+  ClangFuncName.cpp
   )
 
 clang_target_link_libraries(clang-funcname
