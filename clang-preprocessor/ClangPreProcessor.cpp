@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "clang/AST/AST.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/RecursiveASTVisitor.h"
@@ -16,12 +18,18 @@ using namespace clang::tooling;
 int main()
 {
   CompilerInstance ci;
-  ci.createDiagnostics(0, NULL);                                    // create DiagnosticsEngine
-  ci.createFileManager();                                           // create FileManager
-  ci.createSourceManager(ci.getFileManager());                      // create SourceManager
-  ci.createPreprocessor();                                          // create Preprocessor
-  const FileEntry *pFile = ci.getFileManager().getFile("hello.c");  
-  ci.getSourceManager().createMainFileID(pFile);
+  ci.createDiagnostics();                                    // create DiagnosticsEngine
+  ci.createFileManager();                                    // create FileManager
+  ci.createSourceManager(ci.getFileManager());               // create SourceManager
+  ci.createPreprocessor(TU_Complete);                        // create Preprocessor
+     
+  llvm::ErrorOr<const clang::FileEntry*> pFile = ci.getFileManager().getFile("example.cpp");
+  SourceManager &SourceMgr = ci.getSourceManager();
+  SourceMgr.setMainFileID(SourceMgr.createFileID(pFile.get(), SourceLocation(), SrcMgr::C_User));
+
+
+  // ci.getSourceManager().createMainFileID(pFile.get());
+
   ci.getPreprocessor().EnterMainSourceFile();
   ci.getDiagnosticClient().BeginSourceFile(ci.getLangOpts(), &ci.getPreprocessor());
   Token tok;
