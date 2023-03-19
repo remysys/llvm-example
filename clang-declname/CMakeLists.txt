@@ -29,8 +29,10 @@ link_directories(${LLVM_LIBRARY_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 add_executable(clang-declname ClangDeclName.cpp)
+add_executable(clang-declname-include ClangDeclNameInclude.cpp)
 
 target_compile_options(clang-declname PRIVATE -fno-rtti)
+target_compile_options(clang-declname-include PRIVATE -fno-rtti)
 
 set(LLVM_LINK_COMPONENTS
   Option
@@ -40,6 +42,12 @@ set(LLVM_LINK_COMPONENTS
   )
 
 target_link_libraries(clang-declname
+  clangAST
+  clangBasic
+  clangFrontend
+  clangTooling
+  )
+target_link_libraries(clang-declname-include
   clangAST
   clangBasic
   clangFrontend

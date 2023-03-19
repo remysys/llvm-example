@@ -29,6 +29,10 @@ link_directories(${LLVM_LIBRARY_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 add_executable(clang-preprocessor ClangPreProcessor.cpp)
+add_executable(clang-preprocessor-include ClangPreProcessorInclude.cpp)
+
+target_compile_options(clang-preprocessor PRIVATE -fno-rtti)
+target_compile_options(clang-preprocessor-include PRIVATE -fno-rtti)
 
 set(LLVM_LINK_COMPONENTS
   Option
@@ -44,3 +48,9 @@ target_link_libraries(clang-preprocessor
   clangTooling
   )
 
+target_link_libraries(clang-preprocessor-include
+  clangAST
+  clangBasic
+  clangFrontend
+  clangTooling
+  )

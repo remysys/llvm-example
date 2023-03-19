@@ -1,8 +1,10 @@
-int x = 9;
-int main() {
-  int a = 0;
-  int b = 1;
-  int sum = a + b;
-  printf("sum = %d\n", sum);
-  return 0;
+int i = 4;
+extern int j;
+typedef int footype;
+
+int main()
+{
+	typedef unsigned long bartype;
+	printf("Hello World\n");
+	return 0;
 }
