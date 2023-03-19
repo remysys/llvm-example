@@ -58,15 +58,14 @@ int main(int argc, char *argv[]) {
   ci.createSourceManager(ci.getFileManager());
   ci.createPreprocessor(TU_Complete);
   ci.createASTContext();
-  CustomASTConsumer *astConsumer = new CustomASTConsumer();
-  // ci.setASTConsumer(astConsumer);
+  ci.setASTConsumer(std::make_unique<CustomASTConsumer>());
   
   llvm::ErrorOr<const clang::FileEntry*> pFile = ci.getFileManager().getFile(argv[1]);
   SourceManager &SourceMgr = ci.getSourceManager();
   SourceMgr.setMainFileID(SourceMgr.createFileID(pFile.get(), SourceLocation(), SrcMgr::C_User));
 
   ci.getDiagnosticClient().BeginSourceFile(ci.getLangOpts(), &ci.getPreprocessor());
-  clang::ParseAST(ci.getPreprocessor(), astConsumer, ci.getASTContext());
+  clang::ParseAST(ci.getPreprocessor(), &ci.getASTConsumer(), ci.getASTContext());
   ci.getDiagnosticClient().EndSourceFile();
 
   return 0;
