@@ -46,13 +46,18 @@ public:
 };
 
 int main(int argc, char *argv[]) {
+  if (argc != 2) {
+    llvm::errs() << "usage: " << argv[0] << " <input-file>\n";
+    return 1;
+  }
+
   CompilerInstance ci;
   ci.createDiagnostics();
 
   auto to = std::make_shared<TargetOptions>();
   to->Triple = llvm::sys::getDefaultTargetTriple();
-  TargetInfo *tinfo = TargetInfo::CreateTargetInfo(ci.getDiagnostics(), to);
-  ci.setTarget(tinfo);
+  TargetInfo *targetInfo = TargetInfo::CreateTargetInfo(ci.getDiagnostics(), to);
+  ci.setTarget(targetInfo);
 
   ci.createFileManager();
   ci.createSourceManager(ci.getFileManager());

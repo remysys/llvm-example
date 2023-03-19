@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 int i = 4;
 extern int j;
 typedef int footype;

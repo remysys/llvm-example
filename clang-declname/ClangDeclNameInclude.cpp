@@ -22,10 +22,13 @@
 #include "clang/Parse/ParseAST.h"
 #include "clang/Rewrite/Frontend/Rewriters.h"
 #include "llvm/Support/Host.h"
+#include "clang/Lex/HeaderSearch.h"
+#include "clang/Lex/PreprocessorOptions.h"
 
 using namespace clang;
 using namespace clang::driver;
 using namespace clang::tooling;
+using namespace clang::frontend;
 
 class CustomASTConsumer : public ASTConsumer {
 public:
@@ -46,17 +49,35 @@ public:
 };
 
 int main(int argc, char *argv[]) {
+  if (argc != 2) {
+    llvm::errs() << "usage: " << argv[0] << " <input-file>\n";
+    return 1;
+  }
+
   CompilerInstance ci;
   ci.createDiagnostics();
 
   auto to = std::make_shared<TargetOptions>();
   to->Triple = llvm::sys::getDefaultTargetTriple();
-  TargetInfo *tinfo = TargetInfo::CreateTargetInfo(ci.getDiagnostics(), to);
-  ci.setTarget(tinfo);
+  TargetInfo *targetInfo = TargetInfo::CreateTargetInfo(ci.getDiagnostics(), to);
+  ci.setTarget(targetInfo);
 
   ci.createFileManager();
   ci.createSourceManager(ci.getFileManager());
+ 
+  // set up HeaderSearchOptions
+  HeaderSearchOptions &hso = ci.getHeaderSearchOpts();
+
+  // add the system include path
+  hso.AddPath("/usr/include", System, false, false);
+  hso.AddPath("/usr/local/include", System, false, false);
+  hso.AddPath("/usr/local/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include", System, false, false);
+
+  // add the current directory as a user include path
+  hso.AddPath(".", Angled, false, false);
+
   ci.createPreprocessor(TU_Complete);
+
   ci.createASTContext();
   ci.setASTConsumer(std::make_unique<CustomASTConsumer>());
   
