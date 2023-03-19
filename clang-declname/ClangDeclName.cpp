@@ -45,10 +45,9 @@ public:
   }
 };
 
-int main() {
+int main(int argc, char *argv[]) {
   CompilerInstance ci;
   ci.createDiagnostics();
-  
 
   auto to = std::make_shared<TargetOptions>();
   to->Triple = llvm::sys::getDefaultTargetTriple();
@@ -62,7 +61,7 @@ int main() {
   CustomASTConsumer *astConsumer = new CustomASTConsumer();
   // ci.setASTConsumer(astConsumer);
   
-  llvm::ErrorOr<const clang::FileEntry*> pFile = ci.getFileManager().getFile("example.cpp");
+  llvm::ErrorOr<const clang::FileEntry*> pFile = ci.getFileManager().getFile(argv[1]);
   SourceManager &SourceMgr = ci.getSourceManager();
   SourceMgr.setMainFileID(SourceMgr.createFileID(pFile.get(), SourceLocation(), SrcMgr::C_User));
 

@@ -11,22 +11,38 @@
 #include "clang/Tooling/Tooling.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/FileManager.h"
+#include "clang/Basic/SourceManager.h"
+#include "clang/Basic/TargetOptions.h"
+#include "clang/Basic/TargetInfo.h"
+#include "clang/Lex/Preprocessor.h"
+#include "clang/Parse/ParseAST.h"
+#include "clang/Rewrite/Frontend/Rewriters.h"
+#include "llvm/Support/Host.h"
+
 using namespace clang;
 using namespace clang::driver;
 using namespace clang::tooling;
 
-int main()
+int main(int argc, char *argv[])
 {
   CompilerInstance ci;
   ci.createDiagnostics();                                    // create DiagnosticsEngine
+
+  auto to = std::make_shared<TargetOptions>();
+  to->Triple = llvm::sys::getDefaultTargetTriple();
+  TargetInfo *tinfo = TargetInfo::CreateTargetInfo(ci.getDiagnostics(), to);
+  ci.setTarget(tinfo);
+
+
   ci.createFileManager();                                    // create FileManager
   ci.createSourceManager(ci.getFileManager());               // create SourceManager
   ci.createPreprocessor(TU_Complete);                        // create Preprocessor
      
-  llvm::ErrorOr<const clang::FileEntry*> pFile = ci.getFileManager().getFile("example.cpp");
+  llvm::ErrorOr<const clang::FileEntry*> pFile = ci.getFileManager().getFile(argv[1]);
   SourceManager &SourceMgr = ci.getSourceManager();
   SourceMgr.setMainFileID(SourceMgr.createFileID(pFile.get(), SourceLocation(), SrcMgr::C_User));
-
 
   // ci.getSourceManager().createMainFileID(pFile.get());
 
