@@ -94,12 +94,13 @@ class Heap {
 };
 
 class ReturnException : public std::exception {
-  int mRet_;
-
  public:
   explicit ReturnException(int ret) : mRet_(ret) {}
 
   int getRetVal() const { return mRet_; }
+
+ private:
+  int mRet_;
 };
 
 class Array {
@@ -130,8 +131,8 @@ class Environment {
 
   FunctionDecl *mFree_;  /// Declartions to the built-in functions
   FunctionDecl *mMalloc_;
-  FunctionDecl *mInput_;
-  FunctionDecl *mOutput_;
+  FunctionDecl *mGet_;
+  FunctionDecl *mPrint_;
 
   FunctionDecl *mEntry_;
 
@@ -156,7 +157,7 @@ class Environment {
   int getDeclVal(Decl *decl) {
     if (stackTop().hasDecl(decl)) {
       return stackTop().getDeclVal(decl);
-    }  
+    }
     // it should be a global variable
     // llvm::outs() << "get global decl\n";
     // decl->dump();
@@ -169,10 +170,10 @@ class Environment {
 
   static const int kScH001 = 11217991;
   /// Get the declartions to the built-in functions
-  Environment() : mFree_(nullptr), mMalloc_(nullptr), mInput_(nullptr), mOutput_(nullptr), mEntry_(nullptr) {}
+  Environment() : mFree_(nullptr), mMalloc_(nullptr), mGet_(nullptr), mPrint_(nullptr), mEntry_(nullptr) {}
 
   void init(TranslationUnitDecl *unit) {
-    mStack_.emplace_back(StackFrame());
+    mStack_.push_back(StackFrame());
     for (TranslationUnitDecl::decl_iterator i = unit->decls_begin(), e = unit->decls_end(); i != e; ++i) {
       if (auto *fdecl = dyn_cast<FunctionDecl>(*i)) {
         if (fdecl->getName().equals("FREE")) {
@@ -180,9 +181,9 @@ class Environment {
         } else if (fdecl->getName().equals("MALLOC")) {
           mMalloc_ = fdecl;
         } else if (fdecl->getName().equals("GET")) {
-          mInput_ = fdecl;
+          mGet_ = fdecl;
         } else if (fdecl->getName().equals("PRINT")) {
-          mOutput_ = fdecl;
+          mPrint_ = fdecl;
         } else if (fdecl->getName().equals("main")) {
           mEntry_ = fdecl;
         }
@@ -264,12 +265,12 @@ class Environment {
         auto &arr = getArray(arrsub);
         auto idx = getArrayIdx(arrsub);
         arr.set(idx, rval);
-        this->bindStmt(arrsub, rval);
+        stackTop().bindStmt(arrsub, rval);
       } else if (auto *uop = dyn_cast<UnaryOperator>(left)) {
         assert(uop->getOpcode() == UO_Deref);
         int addr = stackTop().getStmtVal(uop->getSubExpr());
         mHeap_.Update(addr, rval);
-        this->bindStmt(uop, rval);  // `*ptr = VAL;` should return VAL
+        stackTop().bindStmt(uop, rval);  // `*ptr = VAL;` should return VAL
       } else {
         llvm::outs() << "below assignment(LHS) is not supported\n";
         left->dump();
@@ -320,7 +321,6 @@ class Environment {
   }
 
   void parm(ParmVarDecl *parmdecl, int val) { stackTop().bindDecl(parmdecl, val); }
-
   /// use by global & local
   void handleVarDecl(VarDecl *vardecl) {
     auto type_info = vardecl->getType();
@@ -380,7 +380,7 @@ class Environment {
   bool isBuiltInDecl(DeclRefExpr *declref) {
     const Decl *decl = declref->getReferencedDeclOfCallee();
     return declref->getType()->isFunctionType() &&
-           (decl == mInput_ || decl == mOutput_ || decl == mMalloc_ || decl == mFree_);
+           (decl == mGet_ || decl == mPrint_ || decl == mMalloc_ || decl == mFree_);
   }
 
   void declref(DeclRefExpr *declref) {
@@ -391,7 +391,7 @@ class Environment {
       int val = this->getDeclVal(decl);
       stackTop().bindStmt(declref, val);
     } else if (!isBuiltInDecl(declref) && !declref->getType()->isFunctionType()) {
-      llvm::outs() << "Below declref is not supported:\n";
+      llvm::outs() << "below declref is not supported:\n";
       declref->dump();
     }
   }
@@ -410,11 +410,11 @@ class Environment {
     stackTop().setPC(callexpr);
     int val = 0;
     FunctionDecl *callee = callexpr->getDirectCallee();
-    if (callee == mInput_) {
+    if (callee == mGet_) {
       llvm::outs() << "please input an integer value: ";
       scanf("%d", &val);
       stackTop().bindStmt(callexpr, val);
-    } else if (callee == mOutput_) {
+    } else if (callee == mPrint_) {
       Expr *decl = callexpr->getArg(0);
       val = stackTop().getStmtVal(decl);
       llvm::errs() << val;

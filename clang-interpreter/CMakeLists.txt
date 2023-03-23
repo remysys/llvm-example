@@ -25,9 +25,11 @@ include_directories(${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
 link_directories(${LLVM_LIBRARY_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-file(GLOB SOURCE "./*.cpp")
+# file(GLOB SOURCE "./*.cpp")
+# add_executable(clang-interpreter ${SOURCE})
 
-add_executable(clang-interpreter ${SOURCE})
+add_executable(clang-interpreter ClangInterpreter.cpp)
+
 target_compile_options(clang-interpreter PRIVATE -fno-rtti)
 
 set(LLVM_LINK_COMPONENTS

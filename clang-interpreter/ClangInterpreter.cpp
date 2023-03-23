@@ -220,16 +220,16 @@ class InterpreterConsumer : public ASTConsumer {
   InterpreterVisitor mVisitor_;
 };
 
-class InterpreterClassAction : public ASTFrontendAction {
+class InterpreterFrontendAction : public ASTFrontendAction {
  public:
-  std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &Compiler,
+  std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &ci,
                                                         llvm::StringRef /*InFile*/) override {
-    return std::unique_ptr<clang::ASTConsumer>(new InterpreterConsumer(Compiler.getASTContext()));
+    return std::unique_ptr<clang::ASTConsumer>(new InterpreterConsumer(ci.getASTContext()));
   }
 };
 
 int main(int argc, char **argv) {
   if (argc > 1) {
-    clang::tooling::runToolOnCode(std::unique_ptr<clang::FrontendAction>(new InterpreterClassAction), argv[1]);
+    clang::tooling::runToolOnCode(std::unique_ptr<clang::FrontendAction>(new InterpreterFrontendAction), argv[1]);
   }
 }
