@@ -35,31 +35,37 @@ class InterpreterVisitor : public EvaluatedExprVisitor<InterpreterVisitor> {
   virtual ~InterpreterVisitor() = default;
 
   virtual void VisitBinaryOperator(BinaryOperator *bop) {
+    bop->dump();
     VisitStmt(bop);
     mEnv_->binop(bop);
   }
 
   virtual void VisitUnaryOperator(UnaryOperator *uop) {
+    uop->dump();
     VisitStmt(uop);
     mEnv_->uop(uop);
   }
 
   virtual void VisitIntegerLiteral(IntegerLiteral *il) {
+    il->dump();
     int val = il->getValue().getSExtValue();
     mEnv_->bindStmt(il, val);
   }
 
   virtual void VisitDeclRefExpr(DeclRefExpr *expr) {
+    expr->dump();
     VisitStmt(expr);
     mEnv_->declref(expr);
   }
 
   virtual void VisitCastExpr(CastExpr *expr) {
+    expr->dump();
     VisitStmt(expr);
     mEnv_->cast(expr);
   }
 
   virtual void VisitCallExpr(CallExpr *call) {
+    call->dump();
     VisitStmt(call);
     bool not_builtin = mEnv_->call(call);
     try {
@@ -73,7 +79,10 @@ class InterpreterVisitor : public EvaluatedExprVisitor<InterpreterVisitor> {
     }
   }
 
-  virtual void VisitDeclStmt(DeclStmt *declstmt) { mEnv_->decl(declstmt); }
+  virtual void VisitDeclStmt(DeclStmt *declstmt) {
+    declstmt->dump();
+    mEnv_->decl(declstmt);
+  }
 
   int getChildrenSize(Stmt *stmt) {
     int i = 0;
@@ -84,18 +93,20 @@ class InterpreterVisitor : public EvaluatedExprVisitor<InterpreterVisitor> {
   }
 
   virtual void VisitArraySubscriptExpr(ArraySubscriptExpr *arrsubexpr) {
-    // arrsubexpr->dump();
+    arrsubexpr->dump();
     // llvm::outs() << "children size: " << getChildrenSize(arrsubexpr) << "\n";
     VisitStmt(arrsubexpr);
     mEnv_->arraysub(arrsubexpr);
   }
 
   virtual void VisitReturnStmt(ReturnStmt *retstmt) {
+    retstmt->dump();
     VisitStmt(retstmt);
     mEnv_->retrn(retstmt);
   }
 
   virtual void VisitIfStmt(IfStmt *ifstmt) {
+    ifstmt->dump();
     Expr *cond_expr = ifstmt->getCond();
     this->Visit(cond_expr);
     int cond = mEnv_->stackTop().getStmtVal(cond_expr);
@@ -113,6 +124,7 @@ class InterpreterVisitor : public EvaluatedExprVisitor<InterpreterVisitor> {
   }
 
   virtual void VisitWhileStmt(WhileStmt *wstmt) {
+    wstmt->dump();
     Expr *cond_expr = wstmt->getCond();
     do {
       this->Visit(cond_expr);
@@ -125,6 +137,7 @@ class InterpreterVisitor : public EvaluatedExprVisitor<InterpreterVisitor> {
   }
 
   virtual void VisitForStmt(ForStmt *fstmt) {
+    fstmt->dump();
     Stmt *initstmt = fstmt->getInit();
     if (initstmt) {
       this->Visit(initstmt);
@@ -142,23 +155,27 @@ class InterpreterVisitor : public EvaluatedExprVisitor<InterpreterVisitor> {
   }
 
   virtual void VisitCStyleCastExpr(CStyleCastExpr *ccastexpr) {
+    ccastexpr->dump();
     this->VisitStmt(ccastexpr);
     stealBindingFromChild(ccastexpr);
   }
 
   virtual void VisitImplicitCastExpr(ImplicitCastExpr *icastexpr) {
+    icastexpr->dump();
     this->VisitStmt(icastexpr);
     stealBindingFromChild(icastexpr);
   }
 
   virtual void VisitParenExpr(ParenExpr *parenexpr) {
+    parenexpr->dump();
     this->VisitStmt(parenexpr);
     stealBindingFromChild(parenexpr);
   }
 
-  /// for some AST(e.g., ImplicitCastExpr, CStyleCastExpr), we need to have their "value" binding.
-  /// so we steal the value binding from their children. Usually, they have only one child.
+  /// for some AST(e.g., ImplicitCastExpr, CStyleCastExpr), we need to have their "value" binding
+  /// so we steal the value binding from their children. usually, they have only one child
   void stealBindingFromChild(Stmt *parent) {
+    parent->dump();
     Stmt *stmt = nullptr;
     for (auto *c : parent->children()) {
       stmt = c;
@@ -176,6 +193,7 @@ class InterpreterVisitor : public EvaluatedExprVisitor<InterpreterVisitor> {
   }
 
   virtual void VisitUnaryExprOrTypeTraitExpr(UnaryExprOrTypeTraitExpr *uexpr) {
+    uexpr->dump();
     this->VisitStmt(uexpr);
     /// we assume the op must be `sizeof`
     // uexpr->getExprStmt()->dump();

@@ -1,3 +1,4 @@
+#!/bin/bash
 
 mkdir build
 cd build
@@ -20,11 +21,11 @@ echo "total test cases: $total"
 for file in $test_file_list; do
     echo "testing $file"
     filename="$TEST_DIR/$file"
-    ccode=$(cat $filename)
+    cppcode=$(cat $filename)
 
     # make $correct as the user input, you can change it if you like
 
-    res=$(echo $correct | ($CLANG_INTERPRETER "$ccode" 2>&1 > /dev/null))
+    res=$(echo $correct | ($CLANG_INTERPRETER "$cppcode" 2>&1 > /dev/null))
     gcc $filename $LIBCODE -o x.out
     expected=$(echo $correct | ./x.out)
 
